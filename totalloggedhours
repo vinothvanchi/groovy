@@ -1,0 +1,19 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.Issue
+
+def issueLinkManager = ComponentAccessor.getIssueLinkManager()
+def linkedIssues = ComponentAccessor.issueLinkManager.getOutwardLinks(issue.id)
+def totalLoggedHours = 0
+
+issueLinkManager.getOutwardLinks(issue.id).each { issueLink ->
+    if (issueLink.issueLinkType.name == "Parent-Child Link")  {
+        def linkedIssue = issueLink.destinationObject
+        issueLinkManager.getOutwardLinks(linkedIssue.id).each {issuesLink ->
+            if (issuesLink.issueLinkType.name == "Epic-Story Link") { 
+                def linkedIssueAtEpic = issuesLink.destinationObject
+                totalLoggedHours += linkedIssueAtEpic.timeSpent ?: 0
+            }
+        }
+    }
+}
+return totalLoggedHours/3600

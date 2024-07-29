@@ -1,0 +1,36 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.onresolve.jira.groovy.user.FieldBehaviours
+import groovy.transform.BaseScript
+
+import static com.atlassian.jira.issue.IssueFieldConstants.ISSUE_TYPE
+
+@BaseScript FieldBehaviours behaviours
+
+def loggedInUser = ComponentAccessor.jiraAuthenticationContext.loggedInUser
+def groupManager = ComponentAccessor.groupManager
+def issueTypeField = getFieldById(ISSUE_TYPE)
+
+def availableIssueTypes = []
+
+def gandaGroupUsers = groupManager.getUsersInGroup("jira-ganda-users")
+def gandaGroupAdmin = groupManager.getUsersInGroup("jira-ganda-admin")
+def hrgandaGroupUsers = groupManager.getUsersInGroup("jira-hrganda-users")
+def adminGroupUsers = groupManager.getUsersInGroup("jira-administrators")
+
+if (gandaGroupUsers.contains(loggedInUser)) {
+    availableIssueTypes.addAll(["Epic", "Story", "Task", "Defect", "Test"])
+}
+
+if (gandaGroupAdmin.contains(loggedInUser)) {
+    availableIssueTypes.addAll(["Epic", "Story", "Task", "Defect", "Test"])
+}
+
+if (adminGroupUsers.contains(loggedInUser)) {
+    availableIssueTypes.addAll(["Epic", "Story", "Task", "Defect", "Test"])
+}
+
+if (hrgandaGroupUsers.contains(loggedInUser)) {
+    availableIssueTypes.addAll(["Defect", "Test"])
+}
+
+issueTypeField.setFieldOptions(availableIssueTypes)

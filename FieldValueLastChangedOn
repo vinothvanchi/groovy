@@ -1,0 +1,19 @@
+//Create this field to store last modified datetime of a field. Though date change info of a field value change is available in the history section of the issue, we can't JQL about it. But the scripted field can be JQLed.  
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.issue.changehistory.ChangeHistoryManager
+import com.atlassian.jira.issue.history.ChangeItemBean
+import com.atlassian.jira.issue.fields.DateField
+
+String fieldName = 'Milestone Date'
+
+ChangeHistoryManager changeHistoryManager = ComponentAccessor.getChangeHistoryManager()
+
+List<ChangeItemBean> changeItems
+changeItems = changeHistoryManager.getChangeItemsForField(issue, fieldName)
+if (changeItems.size()> 0) {
+    changeItems.sort{it.getCreated()}.last().getCreated()
+}
+else {
+    return null
+}

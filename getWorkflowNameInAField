@@ -1,0 +1,20 @@
+/**
+Create this Scripted Field in Jira, if you need a way to search issues by workflow name.
+
+This is a searchable custom field that displays the workflow name
+
+In reality, you don't have to add this field to any screens to use
+it, because it will always be populated and available on every
+issue (just not visible).  Here's an example of the JQL:
+
+Example 1:
+"Workflow Name" = "jira"
+
+Example 2:
+resolution is EMPTY ORDER BY "Workflow Name" DESC 
+**/
+
+import com.atlassian.jira.component.ComponentAccessor
+
+def workflowManager = ComponentAccessor.workflowManager
+workflowManager.getWorkflow(issue).name

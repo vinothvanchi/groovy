@@ -1,0 +1,9 @@
+//create this field to get count of how many times the due date has been changed in an issue
+import com.atlassian.jira.component.ComponentAccessor
+
+def changeHistoryManager = ComponentAccessor.changeHistoryManager
+def issueManager = ComponentAccessor.getIssueManager()
+
+def dueDateChangesList = changeHistoryManager.getChangeItemsForField (issue, "duedate")
+
+dueDateChangesList ? dueDateChangesList.size() : null

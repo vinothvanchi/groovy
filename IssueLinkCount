@@ -1,0 +1,24 @@
+//Use this field to count number of linked to an issue 
+import com.atlassian.jira.component.ComponentAccessor
+
+int x = 0
+def currentLogin = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser()
+def linkedIssues = ComponentAccessor.getIssueLinkManager().getLinkCollection(issue, currentLogin).getAllIssues()
+
+if (linkedIssues.size() > 0 )
+
+{
+  for (int i = 0; i < linkedIssues.size(); i++){x = x + 1}
+  
+  if (linkedIssues) {
+    issues = linkedIssues.count { it.getStatus().getName() != "Done" }
+    return (issues) ? issues : null
+}
+  //{
+    //if (linkedIssues[i].getIssueStatus().getName() != "Done"){x = x + 1}
+  //}
+}
+if (x > 0)
+{
+  return x
+}else return null

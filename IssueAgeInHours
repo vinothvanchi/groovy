@@ -1,0 +1,12 @@
+//Use this scripted field to calculate the age of a ticket in Hours
+import java.time.temporal.ChronoUnit
+//import java.sql.Timestamp
+
+def createdDate = issue.getCreated().toInstant()
+def currentDate = new Date().toInstant()
+
+final chronoUnit = ChronoUnit.HOURS
+
+def diffInDays = ChronoUnit.DAYS.between(createdDate, currentDate);
+
+diffInDays.intdiv(7)

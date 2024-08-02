@@ -1,4 +1,4 @@
-//Use this scripted field to calculate the age of a ticket in Hours
+//Use this scripted field to calculate the age of a ticket in Weeks
 import java.time.temporal.ChronoUnit
 //import java.sql.Timestamp
 

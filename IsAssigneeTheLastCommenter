@@ -1,0 +1,11 @@
+//Use this flag field (returns 0 or 1 only) to trigger some automation like if assignee is the last commenter then send an email or use this field in JQL/Filter/Dashboard
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.Issue
+
+def commentManager = ComponentAccessor.getCommentManager()
+def lastComment = commentManager.getLastComment(issue)
+
+if (lastComment != null && issue.getAssignee().getUsername().equals(lastComment.getAuthorApplicationUser().getUsername()))
+   return 1
+
+return 0

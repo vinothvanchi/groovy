@@ -1,0 +1,13 @@
+//Use this field to count number of stories in an Epic
+import com.atlassian.jira.issue.Issue
+import com.atlassian.jira.component.ComponentAccessor
+
+def issueLinkManager = ComponentAccessor.getIssueLinkManager()
+Integer stories = 0
+issueLinkManager.getOutwardLinks(issue.getId()).each {epicLink ->
+    if (epicLink.getIssueLinkType().getName() == "Epic-Story Link")
+    {
+            stories+=1
+    } 
+}
+return stories.toDouble()

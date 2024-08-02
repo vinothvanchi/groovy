@@ -1,0 +1,10 @@
+//Use this field to calculate issue age in Months
+import java.time.temporal.ChronoUnit
+import java.time.LocalDate
+import java.sql.Timestamp
+import java.time.ZoneId; 
+
+def createdDate = issue.getCreated().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+def currentDate = LocalDate.now()
+
+ChronoUnit.MONTHS.between(createdDate, currentDate);

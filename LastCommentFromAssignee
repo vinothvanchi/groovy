@@ -1,0 +1,13 @@
+//Use this field to find what was the last comment from assignee
+import com.atlassian.jira.issue.comments.Comment
+import com.atlassian.jira.issue.comments.CommentManager
+import com.atlassian.jira.component.ComponentAccessor
+
+def commentManager = ComponentAccessor.getCommentManager()
+def comments = commentManager.getComments(issue).sort{it.getCreated()}
+def assignee = issue.getAssignee().getUsername()
+
+Collections.reverse(comments)
+def lastComment = comments.find { comment -> assignee.equals(comment.getAuthorApplicationUser().getUsername()) }
+
+lastComment ? lastComment.getCreated() : null

@@ -1,0 +1,30 @@
+// Use this field to extract the comments that were added to issues on Wednesday (keeping in mind that meetings happen on Weds and meeting notes are entered as comment on same day
+import java.util.List
+import java.time.DayOfWeek
+import com.atlassian.jira.issue.comments.Comment
+import com.atlassian.jira.issue.comments.CommentManager
+import com.atlassian.jira.security.groups.GroupManager
+import com.atlassian.jira.component.ComponentAccessor
+import org.apache.log4j.Logger
+
+def commentManager = ComponentAccessor.getCommentManager()
+def groupManager = ComponentAccessor.getGroupManager()
+def commentList = commentManager.getComments(issue).sort{it.getCreated()}
+def logger = Logger.getLogger("")
+Collections.reverse(commentList)
+def wedList = []
+for (Comment comment : commentList) {
+   def dayOfWeek = comment.created.toLocalDateTime()?.getDayOfWeek()
+    if(dayOfWeek = "WEDNESDAY"){
+     if(comment.created.day==3){
+         wedList.add(comment.body)
+         wedList.add(comment.getAuthorFullName())
+         wedList.add(comment.created)
+      }
+   }
+}
+if (!wedList.isEmpty()) 
+   return wedList
+else {
+    return wedList.clear()
+}

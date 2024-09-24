@@ -1,0 +1,159 @@
+//DO NOT COPY ALL OF THE CODE TO YOUR LISTENER. THERE ARE 2 SCENARIOS CONSIDERED AND HENCE 2 DIFFERENT CODE SHARED BELOW. GO THRU CAREFULLY BEFORE USING
+//Code-1(To be Run ONLY ONCE using scriptrunner script console): Script to Copy existing Worklogs (from stories to its respective Initiative)
+//------------------------------------------------------------------------------------------------------------------------------------------------
+
+import com.atlassian.jira.issue.Issue
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.worklog.Worklog
+import com.tempoplugin.core.workattribute.api.WorkAttributeService
+import com.tempoplugin.worklog.v4.rest.InputWorklogsFactory
+import com.tempoplugin.worklog.v4.rest.TimesheetWorklogBean
+import com.tempoplugin.worklog.v4.services.WorklogService
+import com.adaptavist.hapi.jira.issues.Issues
+import com.onresolve.scriptrunner.runner.customisers.PluginModule
+import com.onresolve.scriptrunner.runner.customisers.WithPlugin
+
+@WithPlugin('is.origo.jira.tempo-plugin')
+
+@PluginModule
+WorkAttributeService workAttributeService
+
+@PluginModule
+WorklogService worklogService
+
+@PluginModule
+InputWorklogsFactory inputWorklogsFactory
+def issueLinkManager = ComponentAccessor.getIssueLinkManager()
+
+//Uncomment below line and insert your custom JQL query if you have more than 1 story in your scope
+ //Issues.search('project = ABC AND component in ("Dev")').each { storyissues ->
+try {
+        //replace the below line of code with the above one if you have more than 1 story in your scope
+        Issues.search('key=ABC-66').each { storyissues ->  //where ABC-66 is your initiative which is the destination issue where you are going to copy all worklogs frm its stories
+        log.warn "storyissues: " + storyissues.getId()
+        issueLinkManager.getOutwardLinks(storyissues.id).each { PCLink ->
+        if (PCLink.issueLinkType.name == "Parent-Child Link")  {
+                def linkedIssue = PCLink.destinationObject
+                log.warn "linkedIssue:" +linkedIssue
+                issueLinkManager.getOutwardLinks(linkedIssue.id).each {ESLink ->
+                if (ESLink.issueLinkType.name == "Epic-Story Link") { 
+                        def linkedIssueAtEpic = ESLink.destinationObject
+						if(linkedIssueAtEpic.assignee){
+						def assigneeStatus = linkedIssueAtEpic.getAssignee().active
+                        log.warn "linkedIssueAtEpic: " + linkedIssueAtEpic
+                        // Get worklogs for an issue at story level
+                        def worklogManager = ComponentAccessor.getWorklogManager()
+                        def logsOfSourceIssue = worklogManager.getByIssue(linkedIssueAtEpic)
+                        log.warn "logsOfSourceIssue: " + logsOfSourceIssue
+                        if (assigneeStatus == true & logsOfSourceIssue!="") {
+                                for(Worklog worklog : logsOfSourceIssue){
+                                        // Add all fields needed to create a new worklog
+                                        def timesheetWorklogBean = new TimesheetWorklogBean.Builder().
+                                        issueIdOrKey(storyissues.getId().toString()).
+                                        comment(worklog.getComment().toString()).
+                                        startDate(worklog.getStartDate().format("YYYY-MM-dd")).
+                                        workerKey(worklog.getAuthorObject().getKey().toString()).
+                                        timeSpentSeconds(worklog.getTimeSpent())
+                                        .build()
+                                        // log.warn "vv1: "+ timesheetWorklogBean.getProperties()
+                                        def inputWorklogs = inputWorklogsFactory.buildForCreate(timesheetWorklogBean)
+                                        worklogService.createTempoWorklogs(inputWorklogs)
+                                        //log.warn "inputWorklogs: "+ inputWorklogs.toString()
+                        }
+                 }
+                }
+				}
+           }
+        }
+   }
+ }
+ log.warn "End of code"
+}
+catch (Exception e) {
+        log.warn "Exception occurred, but can be ignored"
+}
+
+
+
+//Code-2: Script to Copy all future Worklogs  (from stories to its respective Initiative)
+//This code can be stored in the datacenter node and can be added to a scriptrunner CRON job to run once per day (Ex: 11.59 PM everyday)
+//------------------------------------------------------------------------------------------------------------------------------------------------
+import webwork.action.ActionContext
+import com.atlassian.jira.issue.Issue
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.worklog.Worklog
+import com.tempoplugin.core.workattribute.api.WorkAttributeService
+import com.tempoplugin.worklog.v4.rest.InputWorklogsFactory
+import com.tempoplugin.worklog.v4.rest.TimesheetWorklogBean
+import com.tempoplugin.worklog.v4.services.WorklogService
+import com.adaptavist.hapi.jira.issues.Issues
+import com.onresolve.scriptrunner.runner.customisers.PluginModule
+import com.onresolve.scriptrunner.runner.customisers.WithPlugin
+import groovy.time.*
+import java.time.*
+
+@WithPlugin('is.origo.jira.tempo-plugin')
+
+@PluginModule
+WorkAttributeService workAttributeService
+
+@PluginModule
+WorklogService worklogService
+
+@PluginModule
+InputWorklogsFactory inputWorklogsFactory
+def issueLinkManager = ComponentAccessor.getIssueLinkManager()
+//Uncomment below line and insert your custom JQL query if you have more than 1 story in your scope
+//Issues.search('project = ABC AND component in ("Dev")').each { storyissues ->
+      //replace the below line of code with the above one if you have more than 1 story in your scope
+        Issues.search('key=ABC-7').each { storyissues ->   //where ABC-7 is your initiative which is the destination issue where you are going to copy all worklogs frm its stories
+
+        log.warn "storyissues: " + storyissues.getId()
+        issueLinkManager.getOutwardLinks(storyissues.id).each { PCLink ->
+        if (PCLink.issueLinkType.name == "Parent-Child Link")  {
+                def linkedIssue = PCLink.destinationObject
+                log.warn "linkedIssue:" +linkedIssue
+                issueLinkManager.getOutwardLinks(linkedIssue.id).each {ESLink ->
+                if (ESLink.issueLinkType.name == "Epic-Story Link") { 
+                        def linkedIssueAtEpic = ESLink.destinationObject
+                        if(linkedIssueAtEpic.assignee){
+                        def assigneeStatus = linkedIssueAtEpic.getAssignee().active
+                        def statusCategory = linkedIssueAtEpic.getStatus().statusCategory
+                        log.warn "sc: " +statusCategory
+                        log.warn "linkedIssueAtEpic: " + linkedIssueAtEpic
+                        def worklogManager = ComponentAccessor.getWorklogManager()
+                        def logsOfSourceIssue = worklogManager.getByIssue(linkedIssueAtEpic)
+                        log.warn "logsOfSourceIssue: " + logsOfSourceIssue
+                        ZoneId z = ZoneId.of( "America/New_York" ) 
+                        def currentTime = LocalDateTime.now().format("E MMM dd" )
+                        log.warn "currentTime: "+currentTime
+                        if (assigneeStatus == true & logsOfSourceIssue!="") {
+                                for(Worklog worklog : logsOfSourceIssue){
+                                        // Add all fields needed to create a new worklog
+                                        def created = worklog.getCreated().format("E MMM dd")
+                                        log.warn "created: "+created
+                                        if (created == currentTime) {
+                                        def timesheetWorklogBean = new TimesheetWorklogBean.Builder().
+                                        issueIdOrKey(storyissues.getId().toString()).
+                                        comment(worklog.getComment().toString()).
+                                        startDate(worklog.getStartDate().format("YYYY-MM-dd")).
+                                        workerKey(worklog.getAuthorObject().getKey().toString()).
+                                        timeSpentSeconds(worklog.getTimeSpent())
+                                        .build()
+                                        log.warn "vv1: "+ timesheetWorklogBean.getProperties()
+                                        def inputWorklogs = inputWorklogsFactory.buildForCreate(timesheetWorklogBean)
+                                        worklogService.createTempoWorklogs(inputWorklogs)
+                                        log.warn "inputWorklogs: "+ inputWorklogs.toString()
+                                        }
+                                                                
+                }
+                }
+                }
+                
+        }
+        }
+ }
+ log.warn "End of code.."
+}
+        }
+
